@@ -1,0 +1,35 @@
+---
+title: "Melbourne Housing Price Prediction"
+author: "Lasya Harini Banka"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+```{r}
+
+# Load packages
+library(tidyverse)
+
+# Read the data
+housing <- readRDS("data/housing_clean.rds")
+
+# Keep variables for modeling
+# Remove rows with missing prices
+housing_model <- housing %>%
+  select(Price, Rooms, Type, Distance,
+         Bathroom, Car, Landsize, Regionname) %>%
+  filter(!is.na(Price)) %>%
+  mutate(
+    Type = as.factor(Type),
+    Regionname = as.factor(Regionname)
+  )
+
+# Check the cleaned data
+dim(housing_model)
+summary(housing_model)
+```
