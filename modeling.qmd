@@ -57,3 +57,21 @@ ggplot(housing_model, aes(x = Type, y = Price)) +
   ) +
   theme_minimal()
 ```
+
+```{r}
+# Check rooms and price
+ggplot(housing_model, aes(x = Rooms, y = Price)) +
+  geom_point(alpha = 0.2, color = "steelblue") +
+  labs(
+    title = "Rooms vs Housing Price",
+    x = "Number of Rooms",
+    y = "Price (AUD)"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Check missing values
+housing_model %>%
+  summarise(across(everything(), ~sum(is.na(.))))
+```
