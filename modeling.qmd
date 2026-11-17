@@ -33,3 +33,27 @@ housing_model <- housing %>%
 dim(housing_model)
 summary(housing_model)
 ```
+
+```{r}
+# Check the distribution of prices
+ggplot(housing_model, aes(x = Price)) +
+  geom_histogram(bins = 40, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of Housing Prices",
+    x = "Price (AUD)",
+    y = "Number of Properties"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Compare prices by property type
+ggplot(housing_model, aes(x = Type, y = Price)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(
+    title = "Housing Prices by Property Type",
+    x = "Property Type",
+    y = "Price (AUD)"
+  ) +
+  theme_minimal()
+```
