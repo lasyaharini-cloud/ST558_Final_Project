@@ -2410,6 +2410,162 @@ Main Arguments:
 Computational engine: rpart </code></pre>
 </div>
 </div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the tree workflow</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>tree_workflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(housing_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(tree_model)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the workflow</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>tree_workflow</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: decision_tree()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+1 Recipe Step
+
+• step_impute_median()
+
+── Model ───────────────────────────────────────────────────────────────────────
+Decision Tree Model Specification (regression)
+
+Main Arguments:
+  cost_complexity = tune()
+  tree_depth = tune()
+  min_n = 10
+
+Computational engine: rpart </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create tuning grid</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>tree_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cost_complexity</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="sc">-</span><span class="dv">1</span>)),</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tree_depth</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>L, <span class="dv">10</span>L)),</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="dv">4</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the grid</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>tree_grid</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 16 × 2
+   cost_complexity tree_depth
+             &lt;dbl&gt;      &lt;int&gt;
+ 1          0.0001          2
+ 2          0.001           2
+ 3          0.01            2
+ 4          0.1             2
+ 5          0.0001          4
+ 6          0.001           4
+ 7          0.01            4
+ 8          0.1             4
+ 9          0.0001          7
+10          0.001           7
+11          0.01            7
+12          0.1             7
+13          0.0001         10
+14          0.001          10
+15          0.01           10
+16          0.1            10</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tune the regression tree using 5-fold CV</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>tree_results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  tree_workflow,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> housing_folds,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> tree_grid,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="fu">metric_set</span>(rmse, rsq)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Check tuning results</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(tree_results)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 32 × 8
+   cost_complexity tree_depth .metric .estimator      mean     n std_err .config
+             &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  
+ 1          0.0001          2 rmse    standard     5.14e+5     5 6.59e+3 pre0_m…
+ 2          0.0001          2 rsq     standard     3.58e-1     5 5.95e-3 pre0_m…
+ 3          0.0001          4 rmse    standard     4.21e+5     5 7.28e+3 pre0_m…
+ 4          0.0001          4 rsq     standard     5.69e-1     5 9.48e-3 pre0_m…
+ 5          0.0001          7 rmse    standard     3.71e+5     5 8.65e+3 pre0_m…
+ 6          0.0001          7 rsq     standard     6.65e-1     5 1.05e-2 pre0_m…
+ 7          0.0001         10 rmse    standard     3.63e+5     5 1.02e+4 pre0_m…
+ 8          0.0001         10 rsq     standard     6.81e-1     5 1.23e-2 pre0_m…
+ 9          0.001           2 rmse    standard     5.14e+5     5 6.59e+3 pre0_m…
+10          0.001           2 rsq     standard     3.58e-1     5 5.95e-3 pre0_m…
+# ℹ 22 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find the best tree using RMSE</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>best_tree <span class="ot">&lt;-</span> <span class="fu">select_best</span>(tree_results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the best parameters</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>best_tree</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  cost_complexity tree_depth .config         
+            &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;           
+1          0.0001         10 pre0_mod04_post0</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Finalize the tree workflow</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>final_tree_workflow <span class="ot">&lt;-</span> <span class="fu">finalize_workflow</span>(</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  tree_workflow,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  best_tree</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the final workflow</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>final_tree_workflow</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: decision_tree()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+1 Recipe Step
+
+• step_impute_median()
+
+── Model ───────────────────────────────────────────────────────────────────────
+Decision Tree Model Specification (regression)
+
+Main Arguments:
+  cost_complexity = 1e-04
+  tree_depth = 10
+  min_n = 10
+
+Computational engine: rpart </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit the final tree on training data</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>final_tree_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(final_tree_workflow, <span class="at">data =</span> train_data)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict prices for test data</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>tree_predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(final_tree_fit, <span class="at">new_data =</span> test_data) <span class="sc">%&gt;%</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(test_data <span class="sc">%&gt;%</span> <span class="fu">select</span>(Price))</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check model performance</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>tree_metrics <span class="ot">&lt;-</span> tree_predictions <span class="sc">%&gt;%</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">metrics</span>(<span class="at">truth =</span> Price, <span class="at">estimate =</span> .pred)</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>tree_metrics</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  .metric .estimator  .estimate
+  &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt;
+1 rmse    standard   361217.   
+2 rsq     standard        0.687
+3 mae     standard   215585.   </code></pre>
+</div>
+</div>
 
 </main>
 <!-- /main column -->

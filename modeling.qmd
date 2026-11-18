@@ -126,3 +126,61 @@ tree_workflow <- workflow() %>%
 # Check the workflow
 tree_workflow
 ```
+```{r}
+# Create tuning grid
+tree_grid <- grid_regular(
+  cost_complexity(range = c(-4, -1)),
+  tree_depth(range = c(2L, 10L)),
+  levels = 4
+)
+
+# Check the grid
+tree_grid
+```
+```{r}
+# Tune the regression tree using 5-fold CV
+set.seed(123)
+
+tree_results <- tune_grid(
+  tree_workflow,
+  resamples = housing_folds,
+  grid = tree_grid,
+  metrics = metric_set(rmse, rsq)
+)
+
+# Check tuning results
+collect_metrics(tree_results)
+```
+
+```{r}
+# Find the best tree using RMSE
+best_tree <- select_best(tree_results, metric = "rmse")
+
+# Check the best parameters
+best_tree
+```
+
+```{r}
+# Finalize the tree workflow
+final_tree_workflow <- finalize_workflow(
+  tree_workflow,
+  best_tree
+)
+
+# Check the final workflow
+final_tree_workflow
+```
+```{r}
+# Fit the final tree on training data
+final_tree_fit <- fit(final_tree_workflow, data = train_data)
+
+# Predict prices for test data
+tree_predictions <- predict(final_tree_fit, new_data = test_data) %>%
+  bind_cols(test_data %>% select(Price))
+
+# Check model performance
+tree_metrics <- tree_predictions %>%
+  metrics(truth = Price, estimate = .pred)
+
+tree_metrics
+```
