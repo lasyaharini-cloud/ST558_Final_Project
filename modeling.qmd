@@ -184,3 +184,51 @@ tree_metrics <- tree_predictions %>%
 
 tree_metrics
 ```
+```{r}
+# Create a random forest model
+rf_model <- rand_forest(
+  mtry = tune(),
+  trees = 500,
+  min_n = tune()
+) %>%
+  set_engine("ranger") %>%
+  set_mode("regression")
+
+# Check the model
+rf_model
+```
+```{r}
+# Create the random forest workflow
+rf_workflow <- workflow() %>%
+  add_recipe(housing_recipe) %>%
+  add_model(rf_model)
+
+# Check the workflow
+rf_workflow
+```
+
+```{r}
+# Create tuning grid for random forest
+rf_grid <- grid_regular(
+  mtry(range = c(2L, 7L)),
+  min_n(range = c(5L, 20L)),
+  levels = 3
+)
+
+# Check the tuning grid
+rf_grid
+```
+```{r}
+# Tune random forest using 5-fold CV
+set.seed(123)
+
+rf_results <- tune_grid(
+  rf_workflow,
+  resamples = housing_folds,
+  grid = rf_grid,
+  metrics = metric_set(rmse, rsq)
+)
+
+# Check tuning results
+collect_metrics(rf_results)
+```
