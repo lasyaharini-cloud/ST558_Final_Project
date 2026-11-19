@@ -232,3 +232,58 @@ rf_results <- tune_grid(
 # Check tuning results
 collect_metrics(rf_results)
 ```
+```{r}
+# Find the best random forest using RMSE
+best_rf <- select_best(rf_results, metric = "rmse")
+
+# Check the best parameters
+best_rf
+```
+```{r}
+# Finalize the random forest workflow
+final_rf_workflow <- finalize_workflow(
+  rf_workflow,
+  best_rf
+)
+
+# Check the final workflow
+final_rf_workflow
+```
+```{r}
+# Fit the final random forest on training data
+final_rf_fit <- fit(final_rf_workflow, data = train_data)
+
+# Predict prices for test data
+rf_predictions <- predict(final_rf_fit, new_data = test_data) %>%
+  bind_cols(test_data %>% select(Price))
+
+# Check model performance
+rf_metrics <- rf_predictions %>%
+  metrics(truth = Price, estimate = .pred)
+
+rf_metrics
+```
+```{r}
+# Compare regression tree and random forest
+model_comparison <- bind_rows(
+  tree_metrics %>% mutate(Model = "Regression Tree"),
+  rf_metrics %>% mutate(Model = "Random Forest")
+) %>%
+  select(Model, .metric, .estimate) %>%
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+# Check comparison
+model_comparison
+```
+```{r}
+# Save the final random forest model
+dir.create("models", showWarnings = FALSE)
+
+saveRDS(final_rf_fit, "models/random_forest_model.rds")
+
+# Check that the model was saved
+file.exists("models/random_forest_model.rds")
+```
