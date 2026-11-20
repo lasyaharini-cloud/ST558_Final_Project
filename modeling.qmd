@@ -13,7 +13,7 @@ execute:
 
 ## Introduction
 
-This project aims to predict Melbourne housing prices using property features like rooms, type, distance and location. I built a regression tree and a random forest model to compare their performance. The better model was used to create a prediction API.
+For this project, I worked with Melbourne housing data to predict house prices based on features such as the number of rooms, property type, distance and location. I used two models a regression tree and a random forest, to see which one gave better predictions. I then used the better performing model to build a prediction API..
 
 ## Data Preparation
 
@@ -85,13 +85,17 @@ ggplot(housing_model, aes(x = Rooms, y = Price)) +
   theme_minimal()
 ```
 
-The plots help show how housing prices vary across different properties. I also checked for missing values before building the models.
+The plots gave me a better understanding of how housing prices differ across properties. I also checked for missing values and found that some numeric variables had quite a few missing observations so I handled those during preprocessing.
 
 ```{r}
 # Check missing values
 housing_model %>%
   summarise(across(everything(), ~sum(is.na(.))))
 ```
+
+## Model Training
+
+I split the data into 70% training and 30% testing. I used 5-fold cross-validation to tune the models and median imputation to handle missing numeric values.
 
 ```{r}
 # Load modeling packages
@@ -122,6 +126,10 @@ housing_recipe <- recipe(Price ~ ., data = train_data) %>%
 # Check the recipe
 housing_recipe
 ```
+
+### Regression Tree
+
+I trained a regression tree using the rpart package. I tuned the tree depth and complexity parameter and selected the best model based on RMSE.
 
 ```{r}
 # Create a regression tree
@@ -208,6 +216,10 @@ tree_metrics <- tree_predictions %>%
 tree_metrics
 ```
 
+### Random Forest
+
+I trained a random forest model using 500 trees. I tried different values of mtry and min_n using 5-fold cross-validation. After finding the best combination based on RMSE, I trained the final model and checked its performance on the test data
+
 ```{r}
 # Create a random forest model
 rf_model <- rand_forest(
@@ -293,6 +305,12 @@ rf_metrics <- rf_predictions %>%
 rf_metrics
 ```
 
+## Model Comparison
+
+After training both models, I compared their performance using RMSE, R-squared and MAE. The random forest performed better than the regression tree because it had lower prediction errors and a higher R-squared value.
+
+The random forest had an RMSE of about 325431 and an R-squared of 0.744. Based on these results, I decided to use the random forest as my final model.
+
 ```{r}
 # Compare regression tree and random forest
 model_comparison <- bind_rows(
@@ -318,3 +336,9 @@ saveRDS(final_rf_fit, "models/random_forest_model.rds")
 # Check that the model was saved
 file.exists("models/random_forest_model.rds")
 ```
+
+## Conclusion
+
+After comparing both models, I found that the random forest gave better results than the regression tree. The random forest had a lower RMSE of 325431 compared to 361217 for the regression tree. It also had a higher Rsquared value of 0.744 and a lower MAE of 191576.
+
+Since the random forest performed better I chose it as my final model and used it to create a Plumber API to predict housing prices. I also used Docker to package the API.

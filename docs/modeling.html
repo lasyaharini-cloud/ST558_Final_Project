@@ -2206,8 +2206,23 @@ vertical-align: -.125em;
 <body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-  
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation">Data Preparation</a></li>
+  <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">Exploratory Data Analysis</a></li>
+  <li><a href="#model-training" id="toc-model-training" class="nav-link" data-scroll-target="#model-training">Model Training</a>
+  <ul class="collapse">
+  <li><a href="#regression-tree" id="toc-regression-tree" class="nav-link" data-scroll-target="#regression-tree">Regression Tree</a></li>
+  <li><a href="#random-forest" id="toc-random-forest" class="nav-link" data-scroll-target="#random-forest">Random Forest</a></li>
+  </ul></li>
+  <li><a href="#model-comparison" id="toc-model-comparison" class="nav-link" data-scroll-target="#model-comparison">Model Comparison</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
 </div>
 <main class="content" id="quarto-document-content">
 
@@ -2236,6 +2251,13 @@ vertical-align: -.125em;
 </header>
 
 
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>For this project, I worked with Melbourne housing data to predict house prices based on features such as the number of rooms, property type, distance and location. I used two models a regression tree and a random forest, to see which one gave better predictions. I then used the better performing model to build a prediction API..</p>
+</section>
+<section id="data-preparation" class="level2">
+<h2 class="anchored" data-anchor-id="data-preparation">Data Preparation</h2>
+<p>The original dataset had 34857 rows and 21 columns. I selected seven predictors and used Price as the response variable. I removed rows with missing prices and converted categorical variables into factors. The cleaned dataset had 27247 rows.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load packages</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
@@ -2279,6 +2301,10 @@ vertical-align: -.125em;
  NA&#39;s   :6824     NA&#39;s   :9265       (Other)                   : 265  </code></pre>
 </div>
 </div>
+</section>
+<section id="exploratory-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory Data Analysis</h2>
+<p>I used a histogram, boxplot and scatterplot to explore housing prices and see how they relate to property type and number of rooms.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the distribution of prices</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(housing_model, <span class="fu">aes</span>(<span class="at">x =</span> Price)) <span class="sc">+</span></span>
@@ -2333,6 +2359,7 @@ vertical-align: -.125em;
 </div>
 </div>
 </div>
+<p>The plots gave me a better understanding of how housing prices differ across properties. I also checked for missing values and found that some numeric variables had quite a few missing observations so I handled those during preprocessing.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check missing values</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>housing_model <span class="sc">%&gt;%</span></span>
@@ -2344,6 +2371,10 @@ vertical-align: -.125em;
 1     0     0     0        1     6447  6824     9265          0</code></pre>
 </div>
 </div>
+</section>
+<section id="model-training" class="level2">
+<h2 class="anchored" data-anchor-id="model-training">Model Training</h2>
+<p>I split the data into 70% training and 30% testing. I used 5-fold cross-validation to tune the models and median imputation to handle missing numeric values.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load modeling packages</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
@@ -2365,8 +2396,9 @@ vertical-align: -.125em;
 <pre><code>[1] 8175    8</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 5 folds</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>housing_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(train_data, <span class="at">v =</span> <span class="dv">5</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>housing_folds</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>housing_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(train_data, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>housing_folds</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>#  5-fold cross-validation 
 # A tibble: 5 × 2
@@ -2387,6 +2419,9 @@ vertical-align: -.125em;
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the recipe</span></span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>housing_recipe</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<section id="regression-tree" class="level3">
+<h3 class="anchored" data-anchor-id="regression-tree">Regression Tree</h3>
+<p>I trained a regression tree using the rpart package. I tuned the tree depth and complexity parameter and selected the best model based on RMSE.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a regression tree</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>tree_model <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(</span>
@@ -2488,16 +2523,16 @@ Computational engine: rpart </code></pre>
 <pre><code># A tibble: 32 × 8
    cost_complexity tree_depth .metric .estimator      mean     n std_err .config
              &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  
- 1          0.0001          2 rmse    standard     5.14e+5     5 6.59e+3 pre0_m…
- 2          0.0001          2 rsq     standard     3.58e-1     5 5.95e-3 pre0_m…
- 3          0.0001          4 rmse    standard     4.21e+5     5 7.28e+3 pre0_m…
- 4          0.0001          4 rsq     standard     5.69e-1     5 9.48e-3 pre0_m…
- 5          0.0001          7 rmse    standard     3.71e+5     5 8.65e+3 pre0_m…
- 6          0.0001          7 rsq     standard     6.65e-1     5 1.05e-2 pre0_m…
- 7          0.0001         10 rmse    standard     3.63e+5     5 1.02e+4 pre0_m…
- 8          0.0001         10 rsq     standard     6.81e-1     5 1.23e-2 pre0_m…
- 9          0.001           2 rmse    standard     5.14e+5     5 6.59e+3 pre0_m…
-10          0.001           2 rsq     standard     3.58e-1     5 5.95e-3 pre0_m…
+ 1          0.0001          2 rmse    standard     5.13e+5     5 7.99e+3 pre0_m…
+ 2          0.0001          2 rsq     standard     3.58e-1     5 1.10e-2 pre0_m…
+ 3          0.0001          4 rmse    standard     4.22e+5     5 6.92e+3 pre0_m…
+ 4          0.0001          4 rsq     standard     5.66e-1     5 7.68e-3 pre0_m…
+ 5          0.0001          7 rmse    standard     3.74e+5     5 6.27e+3 pre0_m…
+ 6          0.0001          7 rsq     standard     6.60e-1     5 1.03e-2 pre0_m…
+ 7          0.0001         10 rmse    standard     3.60e+5     5 6.08e+3 pre0_m…
+ 8          0.0001         10 rsq     standard     6.85e-1     5 8.50e-3 pre0_m…
+ 9          0.001           2 rmse    standard     5.13e+5     5 7.99e+3 pre0_m…
+10          0.001           2 rsq     standard     3.58e-1     5 1.10e-2 pre0_m…
 # ℹ 22 more rows</code></pre>
 </div>
 </div>
@@ -2566,6 +2601,10 @@ Computational engine: rpart </code></pre>
 3 mae     standard   215585.   </code></pre>
 </div>
 </div>
+</section>
+<section id="random-forest" class="level3">
+<h3 class="anchored" data-anchor-id="random-forest">Random Forest</h3>
+<p>I trained a random forest model using 500 trees. I tried different values of mtry and min_n using 5-fold cross-validation. After finding the best combination based on RMSE, I trained the final model and checked its performance on the test data</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a random forest model</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(</span>
@@ -2660,24 +2699,24 @@ Computational engine: ranger </code></pre>
 <pre><code># A tibble: 18 × 8
     mtry min_n .metric .estimator       mean     n   std_err .config        
    &lt;int&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;          
- 1     2     5 rmse    standard   340389.        5 9590.     pre0_mod1_post0
- 2     2     5 rsq     standard        0.723     5    0.0109 pre0_mod1_post0
- 3     2    12 rmse    standard   341757.        5 9306.     pre0_mod2_post0
- 4     2    12 rsq     standard        0.721     5    0.0104 pre0_mod2_post0
- 5     2    20 rmse    standard   343025.        5 9331.     pre0_mod3_post0
- 6     2    20 rsq     standard        0.720     5    0.0104 pre0_mod3_post0
- 7     4     5 rmse    standard   332115.        5 9236.     pre0_mod4_post0
- 8     4     5 rsq     standard        0.732     5    0.0111 pre0_mod4_post0
- 9     4    12 rmse    standard   329839.        5 8759.     pre0_mod5_post0
-10     4    12 rsq     standard        0.736     5    0.0103 pre0_mod5_post0
-11     4    20 rmse    standard   329641.        5 8600.     pre0_mod6_post0
-12     4    20 rsq     standard        0.736     5    0.0100 pre0_mod6_post0
-13     7     5 rmse    standard   337085.        5 8456.     pre0_mod7_post0
-14     7     5 rsq     standard        0.725     5    0.0105 pre0_mod7_post0
-15     7    12 rmse    standard   332257.        5 8253.     pre0_mod8_post0
-16     7    12 rsq     standard        0.732     5    0.0104 pre0_mod8_post0
-17     7    20 rmse    standard   331250.        5 7944.     pre0_mod9_post0
-18     7    20 rsq     standard        0.733     5    0.0100 pre0_mod9_post0</code></pre>
+ 1     2     5 rmse    standard   340241.        5 8284.     pre0_mod1_post0
+ 2     2     5 rsq     standard        0.723     5    0.0114 pre0_mod1_post0
+ 3     2    12 rmse    standard   341338.        5 8309.     pre0_mod2_post0
+ 4     2    12 rsq     standard        0.721     5    0.0114 pre0_mod2_post0
+ 5     2    20 rmse    standard   343016.        5 8610.     pre0_mod3_post0
+ 6     2    20 rsq     standard        0.719     5    0.0116 pre0_mod3_post0
+ 7     4     5 rmse    standard   332178.        5 8112.     pre0_mod4_post0
+ 8     4     5 rsq     standard        0.731     5    0.0116 pre0_mod4_post0
+ 9     4    12 rmse    standard   329980.        5 8396.     pre0_mod5_post0
+10     4    12 rsq     standard        0.734     5    0.0115 pre0_mod5_post0
+11     4    20 rmse    standard   329697.        5 8511.     pre0_mod6_post0
+12     4    20 rsq     standard        0.735     5    0.0117 pre0_mod6_post0
+13     7     5 rmse    standard   338549.        5 9000.     pre0_mod7_post0
+14     7     5 rsq     standard        0.722     5    0.0125 pre0_mod7_post0
+15     7    12 rmse    standard   332631.        5 9315.     pre0_mod8_post0
+16     7    12 rsq     standard        0.730     5    0.0126 pre0_mod8_post0
+17     7    20 rmse    standard   331297.        5 9391.     pre0_mod9_post0
+18     7    20 rsq     standard        0.732     5    0.0127 pre0_mod9_post0</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -2745,6 +2784,12 @@ Computational engine: ranger </code></pre>
 3 mae     standard   191576.   </code></pre>
 </div>
 </div>
+</section>
+</section>
+<section id="model-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="model-comparison">Model Comparison</h2>
+<p>After training both models, I compared their performance using RMSE, R-squared and MAE. The random forest performed better than the regression tree because it had lower prediction errors and a higher R-squared value.</p>
+<p>The random forest had an RMSE of about 325431 and an R-squared of 0.744. Based on these results, I decided to use the random forest as my final model.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare regression tree and random forest</span></span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>model_comparison <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
@@ -2779,6 +2824,12 @@ Computational engine: ranger </code></pre>
 <pre><code>[1] TRUE</code></pre>
 </div>
 </div>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>After comparing both models, I found that the random forest gave better results than the regression tree. The random forest had a lower RMSE of 325431 compared to 361217 for the regression tree. It also had a higher Rsquared value of 0.744 and a lower MAE of 191576.</p>
+<p>Since the random forest performed better I chose it as my final model and used it to create a Plumber API to predict housing prices. I also used Docker to package the API.</p>
+</section>
 
 </main>
 <!-- /main column -->
