@@ -10,6 +10,15 @@ execute:
   warning: false
   message: false
 ---
+
+## Introduction
+
+This project aims to predict Melbourne housing prices using property features like rooms, type, distance and location. I built a regression tree and a random forest model to compare their performance. The better model was used to create a prediction API.
+
+## Data Preparation
+
+The original dataset had 34857 rows and 21 columns. I selected seven predictors and used Price as the response variable. I removed rows with missing prices and converted categorical variables into factors. The cleaned dataset had 27247 rows.
+
 ```{r}
 
 # Load packages
@@ -32,7 +41,13 @@ housing_model <- housing %>%
 # Check the cleaned data
 dim(housing_model)
 summary(housing_model)
+
+
 ```
+
+## Exploratory Data Analysis
+
+I used a histogram, boxplot and scatterplot to explore housing prices and see how they relate to property type and number of rooms.
 
 ```{r}
 # Check the distribution of prices
@@ -70,6 +85,8 @@ ggplot(housing_model, aes(x = Rooms, y = Price)) +
   theme_minimal()
 ```
 
+The plots help show how housing prices vary across different properties. I also checked for missing values before building the models.
+
 ```{r}
 # Check missing values
 housing_model %>%
@@ -92,6 +109,7 @@ dim(train_data)
 dim(test_data)
 
 # Create 5 folds
+set.seed(123)
 housing_folds <- vfold_cv(train_data, v = 5)
 housing_folds
 ```
@@ -104,6 +122,7 @@ housing_recipe <- recipe(Price ~ ., data = train_data) %>%
 # Check the recipe
 housing_recipe
 ```
+
 ```{r}
 # Create a regression tree
 tree_model <- decision_tree(
@@ -117,6 +136,7 @@ tree_model <- decision_tree(
 # Check the model
 tree_model
 ```
+
 ```{r}
 # Create the tree workflow
 tree_workflow <- workflow() %>%
@@ -126,6 +146,7 @@ tree_workflow <- workflow() %>%
 # Check the workflow
 tree_workflow
 ```
+
 ```{r}
 # Create tuning grid
 tree_grid <- grid_regular(
@@ -137,6 +158,7 @@ tree_grid <- grid_regular(
 # Check the grid
 tree_grid
 ```
+
 ```{r}
 # Tune the regression tree using 5-fold CV
 set.seed(123)
@@ -170,6 +192,7 @@ final_tree_workflow <- finalize_workflow(
 # Check the final workflow
 final_tree_workflow
 ```
+
 ```{r}
 # Fit the final tree on training data
 final_tree_fit <- fit(final_tree_workflow, data = train_data)
@@ -184,6 +207,7 @@ tree_metrics <- tree_predictions %>%
 
 tree_metrics
 ```
+
 ```{r}
 # Create a random forest model
 rf_model <- rand_forest(
@@ -197,6 +221,7 @@ rf_model <- rand_forest(
 # Check the model
 rf_model
 ```
+
 ```{r}
 # Create the random forest workflow
 rf_workflow <- workflow() %>%
@@ -218,6 +243,7 @@ rf_grid <- grid_regular(
 # Check the tuning grid
 rf_grid
 ```
+
 ```{r}
 # Tune random forest using 5-fold CV
 set.seed(123)
@@ -232,6 +258,7 @@ rf_results <- tune_grid(
 # Check tuning results
 collect_metrics(rf_results)
 ```
+
 ```{r}
 # Find the best random forest using RMSE
 best_rf <- select_best(rf_results, metric = "rmse")
@@ -239,6 +266,7 @@ best_rf <- select_best(rf_results, metric = "rmse")
 # Check the best parameters
 best_rf
 ```
+
 ```{r}
 # Finalize the random forest workflow
 final_rf_workflow <- finalize_workflow(
@@ -249,6 +277,7 @@ final_rf_workflow <- finalize_workflow(
 # Check the final workflow
 final_rf_workflow
 ```
+
 ```{r}
 # Fit the final random forest on training data
 final_rf_fit <- fit(final_rf_workflow, data = train_data)
@@ -263,6 +292,7 @@ rf_metrics <- rf_predictions %>%
 
 rf_metrics
 ```
+
 ```{r}
 # Compare regression tree and random forest
 model_comparison <- bind_rows(
@@ -278,6 +308,7 @@ model_comparison <- bind_rows(
 # Check comparison
 model_comparison
 ```
+
 ```{r}
 # Save the final random forest model
 dir.create("models", showWarnings = FALSE)
